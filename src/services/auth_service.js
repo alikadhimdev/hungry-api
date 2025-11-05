@@ -6,7 +6,8 @@ export class AuthService {
         const payload = {
             id: user._id,
             email: user.email,
-            name: user.name
+            name: user.name,
+            isAdmin: user.isAdmin
         }
         const accessToken = jwt.sign(payload, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn })
         const refreshToken = jwt.sign(payload, jwtConfig.refreshSecret, { expiresIn: jwtConfig.refreshExpiresIn })
