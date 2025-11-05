@@ -1,7 +1,8 @@
 import { User } from "../models/userModel.js"
 import bcrypt from "bcrypt"
 import { AuthService } from "../services/auth_service.js";
-import { loginValidation, registerValidation } from "../validations/authValidation.js";
+import { loginValidation, registerValidation, updateValidation } from "../validations/authValidation.js";
+
 
 export const login = async (req, res) => {
     try {
@@ -135,6 +136,63 @@ export const profile = async (req, res) => {
     }
 }
 
+
+export const updateProfile = async (req, res) => {
+    try {
+        const oldUser = req.user
+        if (!oldUser) {
+            return res.status(401).json({
+                status: 401,
+                message: "Unauthorized: User not found",
+                data: {}
+            });
+        }
+        const { name, email, password, isAdmin } = req.body
+
+        const { error } = updateValidation.validate(req.body)
+
+        if (error) {
+            return res.status(400).json({
+                status: 400,
+                message: error.details.map(err => err.message).join(', ')
+                , data: {}
+            })
+        }
+
+        const updateData = {
+            name, email, isAdmin
+        }
+        if (password) {
+            updateData.password = await bcrypt.hash(password, 8)
+        }
+
+
+        const updateUser = await User.updateOne({ _id: oldUser.id }, {
+            $set: updateData
+        })
+
+
+        if (updateUser.modifiedCount === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "No changes were made to the user profile",
+                data: {}
+            });
+        }
+        return res.status(200).json({
+            status: 200,
+            message: "User profile updated successfully",
+            data: { updateUser },
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: error.message,
+            data: {},
+        })
+    }
+}
 export const refreshToken = async (req, res) => {
     try {
         const { refreshToken } = req.body

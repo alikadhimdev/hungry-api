@@ -27,6 +27,24 @@ export const registerValidation = Joi.object({
     })
 })
 
+export const updateValidation = Joi.object({
+    name: Joi.string().min(3).max(50).messages({
+        'string.min': 'Name must be at least 3 characters',
+        'string.max': 'Name cannot exceed 50 characters',
+
+    }),
+    email: Joi.string().email().messages({
+        'string.email': 'Please provide a valid email',
+
+    }),
+    password: Joi.string().min(8).messages({
+        'string.min': 'Password must be at least 8 characters',
+
+    }),
+    isAdmin: Joi.boolean().messages({
+        'boolean.base': 'isAdmin must be a boolean value'
+    })
+}).options({ convert: false })
 
 export const refreshTokenValidation = Joi.object({
     refreshToken: Joi.string().required().messages({
