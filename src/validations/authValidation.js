@@ -24,7 +24,12 @@ export const registerValidation = Joi.object({
     password: Joi.string().min(8).required().messages({
         'string.min': 'Password must be at least 8 characters',
         'any.required': 'Password is required'
-    })
+    }),
+    phone: Joi.string().min(11).max(16).messages({
+        'string.min': 'Phone must be at least 11 characters',
+        'string.max': 'Phone cannot exceed 16 characters',
+    }),
+
 })
 
 export const updateValidation = Joi.object({

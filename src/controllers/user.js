@@ -59,8 +59,7 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
     try {
-        const { name, email, password } = req.body
-
+        const { name, email, phone, password } = req.body
         const { error } = registerValidation.validate(req.body)
         if (error) {
             return res.status(400).json({
@@ -84,7 +83,9 @@ export const register = async (req, res) => {
         const user = new User({
             name,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            phone,
+
         })
 
         await user.save()
@@ -136,6 +137,23 @@ export const profile = async (req, res) => {
     }
 }
 
+export const logout = async (req, res) => {
+    try {
+
+        req.user = null;
+        return res.status(200).json({
+            status: 200,
+            message: "Logged out successfully",
+            data: {}
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: error.message,
+            data: {},
+        })
+    }
+}
 
 export const updateProfile = async (req, res) => {
     try {
@@ -147,7 +165,7 @@ export const updateProfile = async (req, res) => {
                 data: {}
             });
         }
-        const { name, email, password, isAdmin } = req.body
+        const { name, email, phone, password, isAdmin } = req.body
 
         const { error } = updateValidation.validate(req.body)
 
@@ -160,7 +178,7 @@ export const updateProfile = async (req, res) => {
         }
 
         const updateData = {
-            name, email, isAdmin
+            name, email, isAdmin, phone
         }
         if (password) {
             updateData.password = await bcrypt.hash(password, 8)
