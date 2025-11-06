@@ -4,15 +4,6 @@ import fs from "fs"
 
 
 export const createProduct = async (req, res) => {
-
-    if (!req.user.isAdmin) {
-        return res.status(403).json({
-            status: 403,
-            message: "Unauthorized - Must be an Admin",
-            data: {}
-        })
-    }
-
     try {
         const { name, description, rating, price } = req.body
 
@@ -41,15 +32,6 @@ export const createProduct = async (req, res) => {
 }
 
 export const updateProduct = async (req, res) => {
-
-    if (!req.user.isAdmin) {
-        return res.status(403).json({
-            status: 403,
-            message: "Unauthorized - Must be an Admin",
-            data: {}
-        })
-    }
-
     try {
 
         const { name, description, rating, price } = req.body
@@ -116,13 +98,6 @@ export const updateProduct = async (req, res) => {
 
 
 export const deleteProduct = async (req, res) => {
-    if (!req.user.isAdmin) {
-        return res.status(403).json({
-            status: 403,
-            message: "Unauthorized - Must be an Admin",
-            data: {}
-        })
-    }
 
     try {
         const { id } = req.params
@@ -152,13 +127,6 @@ export const deleteProduct = async (req, res) => {
 }
 
 export const getAllProducts = async (req, res) => {
-    if (!req.user.isAdmin) {
-        return res.status(403).json({
-            status: 403,
-            message: "Unauthorized - Must be an Admin",
-            data: {}
-        })
-    }
     try {
 
         const products = await Product.find()
@@ -189,13 +157,6 @@ export const getAllProducts = async (req, res) => {
 }
 
 export const getProduct = async (req, res) => {
-    if (!req.user.isAdmin) {
-        return res.status(403).json({
-            status: 403,
-            message: "Unauthorized - Must be an Admin",
-            data: {}
-        })
-    }
     try {
 
         const { id } = req.params
