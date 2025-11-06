@@ -1,21 +1,20 @@
 import { User } from "../models/userModel.js"
 import { Product } from "../models/productModel.js"
 import { Favorite } from "../models/favoriteModel.js"
+import { catchAsync } from "../utils/catchAsync.js"
+import { AppError } from "../utils/appError.js"
 
-
-export const addFavorite = async (req, res) => {
+export const addFavorite = catchAsync(async (req, res, next) => {
     try {
         const { id } = req.params
         const user = req.user
         const product = await Product.findById(id)
-        const existUser = await User.findById(user.id)
 
-        if (!existUser || !product) {
-            return res.status(404).send({
-                status: 404,
-                message: "User or Product not found",
-                data: {}
-            })
+        if (!product) {
+            return next(new AppError("Product not found", 404))
+        }
+        if (!user.id) {
+            return next(new AppError("User not found", 404))
         }
         const alreadyExistFavorite = await Favorite.findOne({
             userId: user.id,
@@ -49,23 +48,17 @@ export const addFavorite = async (req, res) => {
 
 
     } catch (error) {
-        return res.status(500).json({
-            status: 500,
-            message: error.message,
-            data: {}
-        })
+        return next(new AppError(error.message, 500))
     }
-}
+})
 
-export const getFavorites = async (req, res) => {
+export const getFavorites = catchAsync(async (req, res, next) => {
     try {
         const user = req.user
-
         const favorites = await Favorite.find({ userId: user.id.id }).populate({
             path: 'productId',
             select: "-creator"
         })
-
         return res.status(200).send({
             status: 200,
             message: "favorites retrieved successfully",
@@ -73,10 +66,6 @@ export const getFavorites = async (req, res) => {
         })
 
     } catch (error) {
-        return res.status(500).json({
-            status: 500,
-            message: error.message,
-            data: {}
-        })
+        return next(AppError(error.message, 500))
     }
-}
+})
