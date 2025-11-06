@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 
 import userRoutes from "./routes/user_route.js";
 import categoryRoute from "./routes/categoryRoute.js"
@@ -10,7 +11,7 @@ import { responseHandler } from "./utils/responseHandler.js";
 const app = express();
 // middlewares
 app.use(express.json());
-
+app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
 app.use("/uploads", express.static("uploads"))
 app.use(responseHandler)

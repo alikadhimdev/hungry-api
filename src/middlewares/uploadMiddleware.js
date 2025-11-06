@@ -3,7 +3,7 @@ import path from "path"
 
 const storage = multer.diskStorage({
     destination: (req, file, cd) => {
-        cd(null, "public/uploads/")
+        cd(null, "public/uploads")
     },
     filename: (req, file, cd) => {
         cd(null, Date.now() + path.extname(file.originalname))
@@ -21,7 +21,7 @@ const upload = multer({
         if (mimeType && extname) {
             return cd(null, true)
         }
-        return cb("Error: File upload only supports the following filetypes - " + fileType);
+        return cd(new Error("Error: File upload only supports the following filetypes - " + fileType));
     }
 })
 
