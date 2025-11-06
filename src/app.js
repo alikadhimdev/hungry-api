@@ -5,6 +5,7 @@ import categoryRoute from "./routes/categoryRoute.js"
 import productRoute from "./routes/productRoute.js"
 import favoriteRoute from "./routes/favoriteRoute.js"
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { responseHandler } from "./utils/responseHandler.js";
 
 const app = express();
 // middlewares
@@ -12,6 +13,7 @@ app.use(express.json());
 
 
 app.use("/uploads", express.static("uploads"))
+app.use(responseHandler)
 // routes
 app.use("/api/auth", userRoutes)
 app.use("/api/category", categoryRoute)
