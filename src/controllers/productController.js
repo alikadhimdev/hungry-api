@@ -23,13 +23,9 @@ export const createProduct = catchAsync(async (req, res, next) => {
 
 export const updateProduct = catchAsync(async (req, res, next) => {
     const { name, description, rating, price } = req.body;
-    const { id } = req.params;
 
-    const existsProduct = await Product.findById(id);
-    if (!existsProduct) return next(new AppError("المنتج غير موجود", 404));
-
-    // معالجة الصورة
-    const imageResult = await processImageUpdate(req, existsProduct.image);
+    const product = req.product
+    const imageResult = await processImageUpdate(req, product.image);
 
     let updateData = {
         name,
@@ -40,38 +36,31 @@ export const updateProduct = catchAsync(async (req, res, next) => {
         image: imageResult.image
     };
 
-    const product = await Product.findByIdAndUpdate(id, updateData, {
+    await Product.findByIdAndUpdate(product.id, updateData, {
         new: true
     });
 
-    res.msg(200, "تم تحديث المنتج بنجاح", product, true);
+    const newProduct = await Product.findById(product.id);
+    res.msg(200, "تم تحديث المنتج بنجاح", newProduct, true);
 });
 
-export const deleteProduct = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const product = await Product.findById(id);
-    if (!product) return next(new AppError("المنتج غير موجود", 404));
+export const deleteProduct = catchAsync(async (req, res) => {
 
-    // حذف الصورة المرتبطة بالمنتج
+    const product = req.product;
     await processImageDeletion(product.image);
-
-    await Product.findByIdAndDelete(id);
+    await Product.findByIdAndDelete(product.id);
     res.msg(200, "تم حذف المنتج بنجاح", {}, true);
 });
 
-export const getAllProducts = catchAsync(async (req, res, next) => {
+export const getAllProducts = catchAsync(async (req, res) => {
     const products = await Product.find()
         .populate("creator", "name email")
         .sort({ createdAt: -1 });
-
     const message = products.length ? "تم تحميل المنتجات بنجاح" : "لا توجد منتجات";
-
     res.msg(200, message, products, true);
 });
 
 export const getProduct = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const product = await Product.findById(id).populate("creator", "name email");
-    if (!product) return next(new AppError(404, "المنتج غير موجود"));
+    const product = await Product.findById(req.product.id).populate("creator", "name email");
     res.msg(200, "تم تحميل المنتج بنجاح", product, true);
 });
