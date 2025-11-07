@@ -31,7 +31,8 @@ const productSchema = new mongoose.Schema({
         require: true
     }
 }, {
-    timestamps: true, toJSON: {
+    timestamps: true,
+    toJSON: {
         virtuals: true,
         versionKey: false,
         transform: function (doc, ret) {

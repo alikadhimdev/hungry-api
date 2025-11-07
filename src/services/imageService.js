@@ -1,6 +1,5 @@
-import path from "path";
 import fs from "fs";
-
+import path from "path";
 
 export const deleteOldImage = async (imagePath) => {
     if (!imagePath) return;
@@ -14,10 +13,23 @@ export const deleteOldImage = async (imagePath) => {
 };
 
 export const processImageUpdate = async (req, currentImagePath) => {
-
     if (req.file) {
-        const newImagePath = `/uploads/${req.file.filename}`;
+        // Create unique filename
+        const fileName = `${Date.now()}${path.extname(req.file.originalname)}`;
+        const uploadDir = "public/uploads";
+
+        // Ensure upload directory exists
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+        // Write file from memory buffer to disk
+        const filePath = path.join(uploadDir, fileName);
+        await fs.promises.writeFile(filePath, req.file.buffer);
+
+        const newImagePath = `/uploads/${fileName}`;
+
+        // Delete old image
         await deleteOldImage(currentImagePath);
+
         return {
             image: newImagePath,
             imageUpdated: true,
@@ -40,10 +52,18 @@ export const processImageUpdate = async (req, currentImagePath) => {
 };
 
 export const processImageCreation = async (req) => {
-    if (req.file) {
-        return `/uploads/${req.file.filename}`;
-    }
-    return null;
+    if (!req.file) return { imagePath: null };
+
+    const uploadDir = "public/uploads";
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+    const fileName = `${Date.now()}${path.extname(req.file.originalname)}`;
+    const filePath = path.join(uploadDir, fileName);
+
+    // Write file from memory buffer to disk
+    await fs.promises.writeFile(filePath, req.file.buffer);
+    const imagePath = `/uploads/${fileName}`;
+    return { imagePath };
 };
 
 export const processImageDeletion = async (imagePath) => {
