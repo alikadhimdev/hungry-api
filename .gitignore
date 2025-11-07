@@ -78,6 +78,7 @@ Thumbs.db
 # Uploads - should not be committed
 uploads/
 public/uploads/
+src/public/uploads/
 
 # Database files
 *.sqlite
