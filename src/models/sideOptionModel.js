@@ -6,13 +6,18 @@ const sideOptionSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    price: {
+        type: Number,
+        required: true,
+        default: 0
+    },
     image: {
         type: String,
         default: null
     },
 
 }, {
-    timeseries: true,
+    timestamps: true,
     toJSON: {
         virtuals: true,
         versionKey: false,

@@ -9,6 +9,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { responseHandler } from "./utils/responseHandler.js";
 import toppingRoute from "./routes/toppingRoute.js"
 import sideOptionRoute from "./routes/sideOptionRoute.js"
+import cartRoute from "./routes/cartRoute.js"
 
 const app = express();
 // middlewares
@@ -24,7 +25,7 @@ app.use("/api/product", productRoute)
 app.use("/api/favorite", favoriteRoute)
 app.use("/api/toppings", toppingRoute)
 app.use("/api/options", sideOptionRoute)
-
+app.use("/api/cart", cartRoute)
 
 // Error MiddleWare Handler
 app.use(errorHandler);
