@@ -28,4 +28,7 @@ const sideOptionSchema = new mongoose.Schema({
     }
 })
 
+// Create indexes for better query performance
+sideOptionSchema.index({ name: 1 });
+
 export const SideOption = mongoose.model("SideOption", sideOptionSchema)

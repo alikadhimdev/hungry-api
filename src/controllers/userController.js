@@ -15,9 +15,21 @@ export const login = catchAsync(async (req, res, next) => {
     if (error) return next(new AppError(400, error.details[0].message));
 
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    
+    // Validate password is provided
+    if (!password) {
+        return next(new AppError(400, "كلمة المرور مطلوبة", "Password is required"));
+    }
+    
+    // Select password field explicitly because it has select: false in schema
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user || user == null) {
+        return next(new AppError(401, "البريد الإلكتروني أو كلمة المرور غير صحيحة"));
+    }
+
+    // Validate user has a password (for existing users who might not have password set)
+    if (!user.password) {
         return next(new AppError(401, "البريد الإلكتروني أو كلمة المرور غير صحيحة"));
     }
 
@@ -51,7 +63,8 @@ export const register = catchAsync(async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 8);
 
     // معالجة الصورة باستخدام الخدمة الجديدة
-    const imagePath = await processImageCreation(req);
+    const imageResult = await processImageCreation(req);
+    const imagePath = imageResult.imagePath || null;
 
     const user = new User({
         name,
@@ -111,9 +124,24 @@ export const updateProfile = catchAsync(async (req, res, next) => {
     const updateData = {
         name, 
         email, 
-        isAdmin, 
         phone
     };
+
+    // Security: Prevent regular users from updating isAdmin field
+    // Only admins can update isAdmin, and only for other users
+    if (isAdmin !== undefined) {
+        // Check if user is admin and trying to update another user
+        if (req.user.role === 'admin' && req.user.id !== oldUser.id) {
+            // Admin can update isAdmin for other users
+            updateData.isAdmin = isAdmin;
+        } else if (req.user.id === oldUser.id) {
+            // User cannot update their own isAdmin status
+            return next(new AppError(403, "لا يمكنك تحديث صلاحياتك الخاصة"));
+        } else {
+            // Non-admin trying to update isAdmin
+            return next(new AppError(403, "غير مصرح لك بتحديث صلاحيات المستخدم"));
+        }
+    }
 
     if (password) {
         updateData.password = await bcrypt.hash(password, 8);

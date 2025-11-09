@@ -128,5 +128,12 @@ orderSchema.virtual("id").get(function () {
     return this._id ? this._id.toHexString() : null;
 });
 
+// Create indexes for better query performance
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ orderNumber: 1 }, { unique: true });
+orderSchema.index({ status: 1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ paymentStatus: 1 });
+
 export const Order = mongoose.model("Order", orderSchema);
 

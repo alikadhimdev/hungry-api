@@ -85,4 +85,7 @@ orderItemSchema.methods.calculateTotalPrice = function() {
     return total;
 };
 
+// Create indexes for better query performance
+orderItemSchema.index({ product: 1 });
+
 export const OrderItem = mongoose.model("OrderItem", orderItemSchema);

@@ -28,4 +28,9 @@ const favoriteSchema = new mongoose.Schema(
     }
 )
 
+// Create indexes for better query performance
+favoriteSchema.index({ userId: 1, productId: 1 }, { unique: true });
+favoriteSchema.index({ userId: 1 });
+favoriteSchema.index({ productId: 1 });
+
 export const Favorite = mongoose.model("Favorite", favoriteSchema);

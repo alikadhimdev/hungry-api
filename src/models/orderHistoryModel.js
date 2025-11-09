@@ -35,5 +35,10 @@ orderHistorySchema.virtual("id").get(function () {
     return this._id ? this._id.toHexString() : null;
 });
 
+// Create indexes for better query performance
+orderHistorySchema.index({ order: 1, timestamp: -1 });
+orderHistorySchema.index({ status: 1 });
+orderHistorySchema.index({ updatedBy: 1 });
+
 export const OrderHistory = mongoose.model("OrderHistory", orderHistorySchema);
 

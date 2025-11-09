@@ -1,13 +1,18 @@
 import jwt from "jsonwebtoken"
 import { jwtConfig } from "../config/jwt.js"
+import { ROLES } from "../config/roles.js"
 
 export class AuthService {
     static generateToken(user) {
+        // Determine user role
+        const role = user.isAdmin ? ROLES.ADMIN : ROLES.USER;
+
         const payload = {
             id: user._id,
             email: user.email,
             name: user.name,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            role: role
         }
         const accessToken = jwt.sign(payload, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn })
         const refreshToken = jwt.sign(payload, jwtConfig.refreshSecret, { expiresIn: jwtConfig.refreshExpiresIn })

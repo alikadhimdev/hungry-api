@@ -42,4 +42,10 @@ const productSchema = new mongoose.Schema({
     }
 })
 
+// Create indexes for better query performance
+productSchema.index({ name: 1 });
+productSchema.index({ creator: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ rating: -1 });
+
 export const Product = mongoose.model("Product", productSchema);

@@ -3,15 +3,15 @@ import {
     getOrderHistory,
     addOrderHistoryUpdate
 } from "../controllers/orderHistoryController.js";
-import { authenticateToken } from "../middlewares/authMiddleware.js";
-import { isAdmin } from "../middlewares/adminMiddleware.js";
+import { authenticateToken, requireOwnership } from "../middlewares/authMiddleware.js";
+import { requireAdminPermission } from "../middlewares/adminMiddleware.js";
 
 const router = express.Router();
 
-// User routes
-router.route("/:orderId").get(authenticateToken, getOrderHistory);
+// User routes - can only access their own order history
+router.route("/:orderId").get(authenticateToken, requireOwnership('orderId'), getOrderHistory);
 
-// Admin routes
-router.route("/:orderId").post(authenticateToken, isAdmin, addOrderHistoryUpdate);
+// Admin routes - can update any order's history
+router.route("/:orderId").post(authenticateToken, requireAdminPermission("update:order_history"), addOrderHistoryUpdate);
 
 export default router;

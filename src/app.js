@@ -1,5 +1,9 @@
 import express from "express";
 import path from "path";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import cors from "cors";
+import dotenv from "dotenv";
 
 import userRoutes from "./routes/user_route.js";
 import categoryRoute from "./routes/categoryRoute.js"
@@ -12,14 +16,101 @@ import sideOptionRoute from "./routes/sideOptionRoute.js"
 import cartRoute from "./routes/cartRoute.js"
 import orderRoute from "./routes/orderRoute.js"
 import orderHistoryRoute from "./routes/orderHistoryRoute.js"
+import {
+  sanitizeInput,
+  validateOrigin,
+  setSecurityHeaders,
+  validateContentType,
+  validateRequestSize
+} from "./middlewares/securityMiddleware.js";
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
-// middlewares
-app.use(express.json());
-app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
-app.use("/uploads", express.static("uploads"))
-app.use(responseHandler)
+// Allowed origins for CORS
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:3000",
+  process.env.ADMIN_URL || "http://localhost:3001"
+];
+
+// Security middlewares
+app.use(helmet()); // Set security-related HTTP headers
+
+// CORS configuration - more flexible in development
+const corsOptions = {
+  origin: function (origin, callback) {
+    // In development or if NODE_ENV is not set to production, allow all origins
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (!isProduction) {
+      // Allow all origins in development for easier testing
+      return callback(null, true);
+    }
+    
+    // In production, check if origin is in allowed list
+    if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
+
+// Set custom security headers
+app.use(setSecurityHeaders);
+
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    error: "Too many requests from this IP, please try again after 15 minutes"
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all API routes
+app.use("/api/", apiLimiter);
+
+// Stricter rate limiting for authentication routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: {
+    error: "Too many authentication attempts, please try again after 15 minutes"
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply stricter rate limiting to auth routes
+app.use("/api/auth", authLimiter);
+
+// Validate request origin for sensitive operations
+app.use("/api/auth", validateOrigin(allowedOrigins));
+app.use("/api/orders", validateOrigin(allowedOrigins));
+app.use("/api/cart", validateOrigin(allowedOrigins));
+
+// Validate content type for API routes
+app.use("/api", validateContentType(["application/json", "multipart/form-data"]));
+
+// Validate request size (5MB max)
+app.use(validateRequestSize(5 * 1024 * 1024));
+
+// Basic middlewares
+app.use(express.json({ limit: '5mb' })); // Limit request body size
+app.use(sanitizeInput); // Sanitize user input to prevent XSS
+app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
+app.use(responseHandler);
+
 // routes
 app.use("/api/auth", userRoutes)
 app.use("/api/category", categoryRoute)

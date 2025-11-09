@@ -29,4 +29,7 @@ cartSchema.virtual('total_price').get(function() {
     return 0; // Will be calculated dynamically in controller
 });
 
+// Create indexes for better query performance
+cartSchema.index({ user: 1 }, { unique: true });
+
 export const Cart = mongoose.model("Cart", cartSchema)

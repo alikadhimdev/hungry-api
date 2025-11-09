@@ -91,6 +91,10 @@ itemSchema.virtual('total_price').get(function() {
     return total;
 });
 
+// Create indexes for better query performance
+itemSchema.index({ product: 1 });
+itemSchema.index({ user: 1 });
+
 export const Item = mongoose.model("Item", itemSchema)
 
 
