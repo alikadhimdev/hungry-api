@@ -1,4 +1,5 @@
 import { Order } from "../models/orderModel.js";
+import { OrderHistory } from "../models/orderHistoryModel.js";
 import { OrderItem } from "../models/orderItemModel.js";
 import { Cart } from "../models/cartModel.js";
 import { Product } from "../models/productModel.js";
@@ -74,7 +75,7 @@ export const createOrder = catchAsync(async (req, res) => {
                 data: {}
             });
         }
-        
+
         // Create order item with base product price
         const orderItemData = {
             product: productId,
@@ -96,7 +97,7 @@ export const createOrder = catchAsync(async (req, res) => {
             sideOptions: cartItem.sideOptions || [],
             spicy: cartItem.spicy || 0
         };
-        
+
         // Calculate total price using the method from the schema
         const itemTotalPrice = OrderItem.schema.methods.calculateTotalPrice.call(tempOrderItem);
 
@@ -117,7 +118,7 @@ export const createOrder = catchAsync(async (req, res) => {
             data: {}
         });
     }
-    
+
     // Generate order number
     const now = new Date();
     const year = now.getFullYear().toString().slice(-2);
@@ -152,12 +153,14 @@ export const createOrder = catchAsync(async (req, res) => {
         deliveryAddress,
         notes,
         estimatedDeliveryTime,
-        orderNumber,
-        trackingHistory: [{
-            status: "pending",
-            timestamp: new Date(),
-            notes: "Order placed successfully"
-        }]
+        orderNumber
+    });
+
+    // Create initial order history record
+    await OrderHistory.create({
+        order: order._id,
+        status: "pending",
+        notes: "Order placed successfully"
     });
 
     // Clear the cart after order is placed
@@ -231,7 +234,7 @@ export const getOrderById = catchAsync(async (req, res) => {
     // Check if the order belongs to the logged-in user or if user is admin
     const orderUserId = order.user._id ? order.user._id.toString() : order.user.toString();
     const currentUserId = req.user.id.toString();
-    
+
     if (orderUserId !== currentUserId && !req.user.isAdmin) {
         res.status(401);
         throw new Error("Not authorized to access this order");
@@ -252,7 +255,7 @@ export const getMyOrders = catchAsync(async (req, res) => {
             data: {}
         });
     }
-    
+
     const orders = await Order.find({ user: req.user.id })
         .sort({ createdAt: -1 })
         .populate("user", "name email");
@@ -290,8 +293,17 @@ export const updateOrderStatus = catchAsync(async (req, res) => {
         throw new Error("Order not found");
     }
 
-    // Add tracking history
-    await order.addTrackingHistory(status, notes);
+    // Create new order history record
+    await OrderHistory.create({
+        order: order._id,
+        status,
+        notes: notes || `Order status updated to ${status}`,
+        updatedBy: req.user._id
+    });
+
+    // Update the order status
+    order.status = status;
+    await order.save();
 
     // Get updated order with populated data
     const updatedOrder = await Order.findById(req.params.id)
@@ -323,7 +335,7 @@ export const cancelOrder = catchAsync(async (req, res) => {
     // Check if the order belongs to the logged-in user
     const orderUserId = order.user._id ? order.user._id.toString() : order.user.toString();
     const currentUserId = req.user.id.toString();
-    
+
     if (orderUserId !== currentUserId) {
         res.status(401);
         throw new Error("Not authorized to access this order");
@@ -335,8 +347,17 @@ export const cancelOrder = catchAsync(async (req, res) => {
         throw new Error("Cannot cancel order that is already being prepared or delivered");
     }
 
-    // Add tracking history
-    await order.addTrackingHistory("cancelled", reason || "Order cancelled by customer");
+    // Create new order history record
+    await OrderHistory.create({
+        order: order._id,
+        status: "cancelled",
+        notes: reason || "Order cancelled by customer",
+        updatedBy: req.user._id
+    });
+
+    // Update the order status
+    order.status = "cancelled";
+    await order.save();
 
     // Get updated order with populated data
     const updatedOrder = await Order.findById(req.params.id)

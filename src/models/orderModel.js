@@ -69,16 +69,7 @@ const orderSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: true
-    },
-    // For tracking purposes
-    trackingHistory: [{
-        status: String,
-        timestamp: {
-            type: Date,
-            default: Date.now
-        },
-        notes: String
-    }]
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -86,7 +77,7 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Generate a unique order number before saving
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
     // Only generate orderNumber if it's a new document and orderNumber is not already set
     if (this.isNew && !this.orderNumber) {
         const now = new Date();
@@ -118,7 +109,7 @@ orderSchema.pre('save', async function(next) {
 });
 
 // Handle errors
-orderSchema.post('save', function(error, doc, next) {
+orderSchema.post('save', function (error, doc, next) {
     if (error.name === 'ValidationError' && error.errors.orderNumber) {
         // Generate a new orderNumber if there's a duplicate
         const now = new Date();
@@ -133,19 +124,9 @@ orderSchema.post('save', function(error, doc, next) {
 });
 
 // Virtual field for id
-orderSchema.virtual("id").get(function() {
+orderSchema.virtual("id").get(function () {
     return this._id ? this._id.toHexString() : null;
 });
 
-// Method to add tracking history
-orderSchema.methods.addTrackingHistory = function(status, notes) {
-    this.trackingHistory.push({
-        status,
-        timestamp: new Date(),
-        notes
-    });
-    this.status = status;
-    return this.save();
-};
-
 export const Order = mongoose.model("Order", orderSchema);
+

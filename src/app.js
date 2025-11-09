@@ -11,6 +11,7 @@ import toppingRoute from "./routes/toppingRoute.js"
 import sideOptionRoute from "./routes/sideOptionRoute.js"
 import cartRoute from "./routes/cartRoute.js"
 import orderRoute from "./routes/orderRoute.js"
+import orderHistoryRoute from "./routes/orderHistoryRoute.js"
 
 const app = express();
 // middlewares
@@ -28,6 +29,7 @@ app.use("/api/toppings", toppingRoute)
 app.use("/api/options", sideOptionRoute)
 app.use("/api/cart", cartRoute)
 app.use("/api/orders", orderRoute)
+app.use("/api/order-history", orderHistoryRoute)
 
 // Error MiddleWare Handler
 app.use(errorHandler);
