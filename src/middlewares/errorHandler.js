@@ -109,6 +109,22 @@ export const errorHandler = (err, req, res, next) => {
     // Log the error
     logError(error, req);
 
+    // Handle express.json() size limit errors
+    if (err.type === 'entity.too.large' || err.message === 'Request entity too large' || err.message.includes('too large')) {
+        const message = isArabic 
+            ? 'حجم الطلب كبير جداً' 
+            : 'Request entity too large';
+        error = new AppError(413, message, 'TOO_MANY_REQUESTS', null, isArabic);
+    }
+
+    // Handle JSON parsing errors
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        const message = isArabic 
+            ? 'تنسيق JSON غير صالح' 
+            : 'Invalid JSON format';
+        error = new AppError(400, message, 'BAD_REQUEST', null, isArabic);
+    }
+
     // Handle specific error types
     if (err.code === 11000) error = handleDuplicateKeyError(err, req);
     if (err.name === 'ValidationError') error = handleValidationError(err, req);

@@ -99,7 +99,8 @@ export const validateContentType = (allowedTypes) => {
       return next();
     }
 
-    // In development or if NODE_ENV is not set to production, be more lenient
+    // Check if strict security tests are enabled (for testing purposes)
+    const strictSecurityTests = process.env.ENABLE_STRICT_SECURITY_TESTS === 'true';
     const isProduction = process.env.NODE_ENV === 'production';
     
     // Skip validation if request has no body
@@ -114,8 +115,8 @@ export const validateContentType = (allowedTypes) => {
       );
 
       if (!isAllowed) {
-        // In development, allow common content types for easier testing
-        if (!isProduction && (
+        // In development, allow common content types for easier testing (unless strict tests enabled)
+        if (!isProduction && !strictSecurityTests && (
           req.headers["content-type"].includes('application/x-www-form-urlencoded') ||
           req.headers["content-type"].includes('text/plain')
         )) {
@@ -124,8 +125,8 @@ export const validateContentType = (allowedTypes) => {
         return next(new AppError(400, `Content-Type not allowed. Allowed types: ${allowedTypes.join(', ')}`));
       }
     } else {
-      // In development, allow requests without content-type for easier testing
-      if (!isProduction) {
+      // In development, allow requests without content-type for easier testing (unless strict tests enabled)
+      if (!isProduction && !strictSecurityTests) {
         return next();
       }
       return next(new AppError(400, "Content-Type header is required"));
@@ -138,11 +139,36 @@ export const validateContentType = (allowedTypes) => {
 // Middleware to validate request size
 export const validateRequestSize = (maxSizeInBytes) => {
   return (req, res, next) => {
+    // Check content-length header first
     const contentLength = req.headers["content-length"];
-
     if (contentLength && parseInt(contentLength, 10) > maxSizeInBytes) {
       return next(new AppError(413, "Request entity too large"));
     }
+
+    // Also check actual body size if body is already parsed
+    // This catches cases where content-length header might be missing or incorrect
+    if (req.body) {
+      try {
+        const bodySize = JSON.stringify(req.body).length;
+        if (bodySize > maxSizeInBytes) {
+          return next(new AppError(413, "Request entity too large"));
+        }
+      } catch (err) {
+        // If body is not JSON-serializable, check if it's a buffer or string
+        if (Buffer.isBuffer(req.body)) {
+          if (req.body.length > maxSizeInBytes) {
+            return next(new AppError(413, "Request entity too large"));
+          }
+        } else if (typeof req.body === 'string') {
+          if (req.body.length > maxSizeInBytes) {
+            return next(new AppError(413, "Request entity too large"));
+          }
+        }
+      }
+    }
+
+    // Store max size for later validation in body parser
+    req._maxBodySize = maxSizeInBytes;
 
     next();
   };

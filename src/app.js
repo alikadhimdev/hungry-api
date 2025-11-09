@@ -102,11 +102,21 @@ app.use("/api/cart", validateOrigin(allowedOrigins));
 // Validate content type for API routes
 app.use("/api", validateContentType(["application/json", "multipart/form-data"]));
 
-// Validate request size (5MB max)
-app.use(validateRequestSize(5 * 1024 * 1024));
+// Basic middlewares - body parser with size limit
+// Note: express.json() will reject requests larger than limit with 413 status
+app.use(express.json({ 
+  limit: '5mb',
+  // Handle JSON parsing errors
+  verify: (req, res, buf, encoding) => {
+    // Check size before parsing
+    if (buf && buf.length > 5 * 1024 * 1024) {
+      throw new Error('Request entity too large');
+    }
+  }
+}));
 
-// Basic middlewares
-app.use(express.json({ limit: '5mb' })); // Limit request body size
+// Validate request size (5MB max) - after body parsing to check actual body size
+app.use(validateRequestSize(5 * 1024 * 1024));
 app.use(sanitizeInput); // Sanitize user input to prevent XSS
 app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 app.use(responseHandler);
