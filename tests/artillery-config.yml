@@ -1,0 +1,39 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up load"
+    - duration: 60
+      arrivalRate: 20
+      name: "Sustained load"
+  defaults:
+    headers:
+      Authorization: "Bearer YOUR_TEST_TOKEN_HERE"
+      Content-Type: "application/json"
+  processor: "./artillery-processor.js"
+
+scenarios:
+  - name: "Get Products"
+    flow:
+      - get:
+          url: "/api/product"
+  - name: "Get Categories"
+    flow:
+      - get:
+          url: "/api/category"
+  - name: "Get Cart"
+    flow:
+      - get:
+          url: "/api/cart"
+  - name: "Create Order"
+    flow:
+      - post:
+          url: "/api/orders"
+          json:
+            items: []
+            total: 0
+

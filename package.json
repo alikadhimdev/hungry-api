@@ -6,7 +6,14 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:load": "node tests/load/loadTest.js",
+    "test:load:light": "node tests/load/loadTest.js light",
+    "test:load:medium": "node tests/load/loadTest.js medium",
+    "test:load:heavy": "node tests/load/loadTest.js heavy",
+    "test:security": "node tests/security/securityTest.js",
+    "test:performance": "node tests/performance/performanceTest.js",
+    "test:all": "npm run test:security && npm run test:performance && npm run test:load:light"
   },
   "keywords": [],
   "author": "",
@@ -14,14 +21,21 @@
   "description": "",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.3",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "xss": "^1.0.14"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "autocannon": "^7.12.0",
+    "artillery": "^2.0.0",
+    "clinic": "^13.0.0"
   }
 }
