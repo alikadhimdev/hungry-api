@@ -130,7 +130,6 @@ orderSchema.virtual("id").get(function () {
 
 // Create indexes for better query performance
 orderSchema.index({ user: 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 }, { unique: true });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ paymentStatus: 1 });

@@ -43,12 +43,12 @@ const corsOptions = {
   origin: function (origin, callback) {
     // In development or if NODE_ENV is not set to production, allow all origins
     const isProduction = process.env.NODE_ENV === 'production';
-    
+
     if (!isProduction) {
       // Allow all origins in development for easier testing
       return callback(null, true);
     }
-    
+
     // In production, check if origin is in allowed list
     if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
       callback(null, true);
@@ -82,8 +82,8 @@ app.use("/api/", apiLimiter);
 
 // Stricter rate limiting for authentication routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.MAX_AUTH_ATTEMPTS) || 10, // limit each IP to 5 requests per windowMs
   message: {
     error: "Too many authentication attempts, please try again after 15 minutes"
   },
@@ -104,7 +104,7 @@ app.use("/api", validateContentType(["application/json", "multipart/form-data"])
 
 // Basic middlewares - body parser with size limit
 // Note: express.json() will reject requests larger than limit with 413 status
-app.use(express.json({ 
+app.use(express.json({
   limit: '5mb',
   // Handle JSON parsing errors
   verify: (req, res, buf, encoding) => {

@@ -28,7 +28,5 @@ const toppingSchema = new mongoose.Schema({
     }
 })
 
-// Create indexes for better query performance
-toppingSchema.index({ name: 1 });
 
 export const Topping = mongoose.model("Topping", toppingSchema)

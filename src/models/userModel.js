@@ -51,7 +51,6 @@ const userSchema = new mongoose.Schema(
 )
 
 // Create indexes for better query performance
-userSchema.index({ email: 1 });
 userSchema.index({ isAdmin: 1 });
 
 export const User = mongoose.model("User", userSchema);

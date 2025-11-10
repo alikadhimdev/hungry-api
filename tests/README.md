@@ -40,7 +40,7 @@ NODE_ENV=development
 أو استخدم السكريبت المساعد:
 
 ```bash
-node tests/helpers/getTestToken.js your-email@example.com your-password
+node tests/helpers/getTestToken.js ali8@email.com Aa11112222
 ```
 
 To create `TEST_TOKEN`:

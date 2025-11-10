@@ -5,8 +5,9 @@ import { ROLES, hasPermission } from "../config/roles.js";
 import { RateLimit } from "../models/rateLimitModel.js";
 
 // Rate limiting configuration
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000; // 15 minutes (default)
+const MAX_ATTEMPTS = parseInt(process.env.MAX_AUTH_ATTEMPTS) || 10; // Default 10 attempts
 
 // Rate limiting for authentication attempts using MongoDB
 const isRateLimited = async (ip) => {
@@ -57,8 +58,8 @@ export const authenticateToken = catchAsync(async (req, res, next) => {
     // Check rate limiting (async)
     const rateLimited = await isRateLimited(ip);
     if (rateLimited) {
-        const message = isArabic 
-            ? "محاولات مصادقة كثيرة جداً. يرجى المحاولة مرة أخرى لاحقاً." 
+        const message = isArabic
+            ? "محاولات مصادقة كثيرة جداً. يرجى المحاولة مرة أخرى لاحقاً."
             : "Too many authentication attempts. Please try again later.";
         return next(new AppError(429, message, 'TOO_MANY_REQUESTS', null, isArabic));
     }
@@ -66,15 +67,15 @@ export const authenticateToken = catchAsync(async (req, res, next) => {
     const authHeader = req.header('Authorization');
 
     if (!authHeader) {
-        const message = isArabic 
-            ? "مطلوب رمز الوصول" 
+        const message = isArabic
+            ? "مطلوب رمز الوصول"
             : "Access token is required";
         return next(new AppError(401, message, 'UNAUTHORIZED', null, isArabic));
     }
 
     if (!authHeader.startsWith('Bearer ')) {
-        const message = isArabic 
-            ? "تنسيق الرمز غير صالح. استخدم 'Bearer [token]'" 
+        const message = isArabic
+            ? "تنسيق الرمز غير صالح. استخدم 'Bearer [token]'"
             : "Invalid token format. Use 'Bearer [token]'";
         return next(new AppError(401, message, 'UNAUTHORIZED', null, isArabic));
     }
@@ -82,8 +83,8 @@ export const authenticateToken = catchAsync(async (req, res, next) => {
     const token = authHeader.substring(7);
 
     if (!token) {
-        const message = isArabic 
-            ? "مطلوب رمز الوصول" 
+        const message = isArabic
+            ? "مطلوب رمز الوصول"
             : "Access token is required";
         return next(new AppError(401, message, 'UNAUTHORIZED', null, isArabic));
     }
@@ -104,8 +105,8 @@ export const authenticateToken = catchAsync(async (req, res, next) => {
             console.error('Failed to record rate limit attempt:', err);
         });
 
-        const message = isArabic 
-            ? "رمز غير صالح أو منتهي الصلاحية" 
+        const message = isArabic
+            ? "رمز غير صالح أو منتهي الصلاحية"
             : "Invalid or expired token";
         return next(new AppError(403, message, 'FORBIDDEN', null, isArabic));
     }
@@ -118,8 +119,8 @@ export const requirePermission = (permission) => {
         const isArabic = req && req.headers && (req.headers['accept-language'] && (req.headers['accept-language'].includes('ar') || req.headers['accept-language'].includes('ar-SA')));
 
         if (!req.user) {
-            const message = isArabic 
-                ? "مطلوب مصادقة" 
+            const message = isArabic
+                ? "مطلوب مصادقة"
                 : "Authentication required";
             return next(new AppError(401, message, 'UNAUTHORIZED', null, isArabic));
         }
@@ -129,8 +130,8 @@ export const requirePermission = (permission) => {
             return next();
         }
 
-        const message = isArabic 
-            ? "صلاحيات غير كافية" 
+        const message = isArabic
+            ? "صلاحيات غير كافية"
             : "Insufficient permissions";
         return next(new AppError(403, message, 'FORBIDDEN', null, isArabic));
     };
@@ -143,8 +144,8 @@ export const requireRole = (role) => {
         const isArabic = req && req.headers && (req.headers['accept-language'] && (req.headers['accept-language'].includes('ar') || req.headers['accept-language'].includes('ar-SA')));
 
         if (!req.user) {
-            const message = isArabic 
-                ? "مطلوب مصادقة" 
+            const message = isArabic
+                ? "مطلوب مصادقة"
                 : "Authentication required";
             return next(new AppError(401, message, 'UNAUTHORIZED', null, isArabic));
         }
@@ -153,8 +154,8 @@ export const requireRole = (role) => {
             return next();
         }
 
-        const message = isArabic 
-            ? `الوصول مرفوض. مطلوب دور: ${role}` 
+        const message = isArabic
+            ? `الوصول مرفوض. مطلوب دور: ${role}`
             : `Access denied. Required role: ${role}`;
         return next(new AppError(403, message, 'FORBIDDEN', null, isArabic));
     };
@@ -167,8 +168,8 @@ export const requireAnyRole = (roles) => {
         const isArabic = req && req.headers && (req.headers['accept-language'] && (req.headers['accept-language'].includes('ar') || req.headers['accept-language'].includes('ar-SA')));
 
         if (!req.user) {
-            const message = isArabic 
-                ? "مطلوب مصادقة" 
+            const message = isArabic
+                ? "مطلوب مصادقة"
                 : "Authentication required";
             return next(new AppError(401, message, 'UNAUTHORIZED', null, isArabic));
         }
@@ -177,8 +178,8 @@ export const requireAnyRole = (roles) => {
             return next();
         }
 
-        const message = isArabic 
-            ? `الوصول مرفوض. مطلوب أحد هذه الأدوار: ${roles.join(', ')}` 
+        const message = isArabic
+            ? `الوصول مرفوض. مطلوب أحد هذه الأدوار: ${roles.join(', ')}`
             : `Access denied. Required one of these roles: ${roles.join(', ')}`;
         return next(new AppError(403, message, 'FORBIDDEN', null, isArabic));
     };
@@ -198,8 +199,8 @@ export const requireOwnership = (resourceIdParam = 'id') => {
         const resourceId = req.params[resourceIdParam];
 
         if (!resourceId) {
-            const message = isArabic 
-                ? "مطلوب معرف المورد" 
+            const message = isArabic
+                ? "مطلوب معرف المورد"
                 : "Resource ID is required";
             return next(new AppError(400, message, 'BAD_REQUEST', null, isArabic));
         }
@@ -211,15 +212,15 @@ export const requireOwnership = (resourceIdParam = 'id') => {
             const order = await Order.default.findById(resourceId);
 
             if (!order) {
-                const message = isArabic 
-                    ? "الطلب غير موجود" 
+                const message = isArabic
+                    ? "الطلب غير موجود"
                     : "Order not found";
                 return next(new AppError(404, message, 'NOT_FOUND', null, isArabic));
             }
 
             if (order.user.toString() !== req.user.id) {
-                const message = isArabic 
-                    ? "يمكنك الوصول إلى طلباتك فقط" 
+                const message = isArabic
+                    ? "يمكنك الوصول إلى طلباتك فقط"
                     : "You can only access your own orders";
                 return next(new AppError(403, message, 'FORBIDDEN', null, isArabic));
             }
