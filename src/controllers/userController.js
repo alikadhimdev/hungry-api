@@ -15,12 +15,12 @@ export const login = catchAsync(async (req, res, next) => {
     if (error) return next(new AppError(400, error.details[0].message));
 
     const { email, password } = req.body;
-    
+
     // Validate password is provided
     if (!password) {
         return next(new AppError(400, "كلمة المرور مطلوبة", "Password is required"));
     }
-    
+
     // Select password field explicitly because it has select: false in schema
     const user = await User.findOne({ email }).select('+password');
 
@@ -52,7 +52,7 @@ export const login = catchAsync(async (req, res, next) => {
  * إنشاء حساب مستخدم جديد
  */
 export const register = catchAsync(async (req, res, next) => {
-    const { name, email, phone, password } = req.body;
+    const { name, email, password, phone } = req.body;
     const { error } = registerValidation.validate(req.body);
 
     if (error) return next(new AppError(400, error.details[0].message));
@@ -112,29 +112,32 @@ export const logout = catchAsync(async (req, res, next) => {
  * تحديث بيانات الملف الشخصي للمستخدم
  */
 export const updateProfile = catchAsync(async (req, res, next) => {
-    const oldUser = req.user;
+    const userId = req.user.id;
+    const oldUser = await User.findById(userId);
 
-    if (!oldUser) return next(new AppError(401, "المستخدم غير مصادق عليه"));
+    if (!oldUser) return next(new AppError(404, "المستخدم غير موجود"));
 
-    const { name, email, phone, password, isAdmin } = req.body;
+    const { name, email, phone, password, isAdmin, address, visa } = req.body;
     const { error } = updateValidation.validate(req.body);
 
     if (error) return next(new AppError(400, error.details[0].message));
 
     const updateData = {
-        name, 
-        email, 
-        phone
+        name,
+        email,
+        phone,
+        address,
+        visa
     };
 
     // Security: Prevent regular users from updating isAdmin field
     // Only admins can update isAdmin, and only for other users
     if (isAdmin !== undefined) {
         // Check if user is admin and trying to update another user
-        if (req.user.role === 'admin' && req.user.id !== oldUser.id) {
+        if (req.user.role === 'admin' && req.user.id !== oldUser.id.toString()) {
             // Admin can update isAdmin for other users
             updateData.isAdmin = isAdmin;
-        } else if (req.user.id === oldUser.id) {
+        } else if (req.user.id === oldUser.id.toString()) {
             // User cannot update their own isAdmin status
             return next(new AppError(403, "لا يمكنك تحديث صلاحياتك الخاصة"));
         } else {

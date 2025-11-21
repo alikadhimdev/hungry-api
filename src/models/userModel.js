@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true
         },
+        address: {
+            type: String,
+            trim: true
+        },
         password: {
             type: String,
             required: true,
@@ -34,6 +38,10 @@ const userSchema = new mongoose.Schema(
         isAdmin: {
             type: Boolean,
             default: false,
+        },
+        visa: {
+            type: String,
+            default: null
         }
     }
     ,
@@ -45,6 +53,12 @@ const userSchema = new mongoose.Schema(
             transform: function (doc, ret) {
                 ret.id = ret._id;
                 delete ret._id;
+                delete ret.password;
+
+                if (ret.image && ret.image.startsWith('/')) {
+                    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+                    ret.image = `${baseUrl}${ret.image}`;
+                }
             }
         }
     }

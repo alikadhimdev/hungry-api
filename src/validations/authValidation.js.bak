@@ -7,48 +7,49 @@ const passwordPattern = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])');
 const phonePattern = new RegExp('^[+]?[(]?[0-9]{1,4}[)]?[-s./0-9]*$');
 
 export const loginValidation = Joi.object({
-    email: Joi.string().email().optional().messages({
+    email: Joi.string().email().required().messages({
         'string.email': 'الرجاء تزويد بريد إلكتروني صحيح',
         'any.required': 'البريد الإلكتروني مطلوب'
     }),
-    password: Joi.string().min(8).optional().messages({
+    password: Joi.string().min(8).required().messages({
         'string.min': 'يجب أن تكون كلمة المرور 8 أحرف على الأقل',
         'any.required': 'كلمة المرور مطلوبة'
     })
 });
 
 export const registerValidation = Joi.object({
-    name: Joi.string().min(3).max(50).optional().messages({
+    name: Joi.string().min(3).max(50).required().messages({
         'string.min': 'يجب أن يكون الاسم 3 أحرف على الأقل',
         'string.max': 'لا يمكن أن يتجاوز الاسم 50 حرفًا',
         'any.required': 'الاسم مطلوب'
     }),
-    email: Joi.string().email().optional().messages({
+    email: Joi.string().email().required().messages({
         'string.email': 'الرجاء تزويد بريد إلكتروني صحيح',
         'any.required': 'البريد الإلكتروني مطلوب'
     }),
     password: Joi.string()
         .min(8)
         .pattern(passwordPattern)
-        .optional()
+        .required()
         .messages({
             'string.pattern.base': 'يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل، وحرف كبير واحد، ورقم واحد',
             'string.min': 'يجب أن تكون كلمة المرور 8 أحرف على الأقل',
             'any.required': 'كلمة المرور مطلوبة'
         }),
-    phone: Joi.string()
+    .phone: Joi.string()
         .pattern(phonePattern)
         .min(11)
         .max(16)
-        .optional()
+        .required()
         .messages({
             'string.pattern.base': 'الرجاء تزويد رقم هاتف صحيح',
             'string.min': 'يجب أن يكون رقم الهاتف 11 رقمًا على الأقل',
             'string.max': 'لا يمكن أن يتجاوز رقم الهاتف 16 رقمًا',
+            'any.required': 'رقم الهاتف مطلوب'
         }),
     confirmPassword: Joi.string()
         .valid(Joi.ref('password'))
-        .optional()
+        .required()
         .messages({
             'any.only': 'كلمات المرور غير متطابقة',
             'any.required': 'تأكيد كلمة المرور مطلوب'
@@ -71,7 +72,7 @@ export const updateValidation = Joi.object({
             'string.pattern.base': 'يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل، وحرف كبير واحد، ورقم واحد، وحرف خاص واحد',
             'string.min': 'يجب أن تكون كلمة المرور 8 أحرف على الأقل'
         }),
-    phone: Joi.string()
+    .phone: Joi.string()
         .pattern(phonePattern)
         .min(11)
         .max(16)
@@ -79,14 +80,7 @@ export const updateValidation = Joi.object({
             'string.pattern.base': 'الرجاء تزويد رقم هاتف صحيح',
             'string.min': 'يجب أن يكون رقم الهاتف 11 رقمًا على الأقل',
             'string.max': 'لا يمكن أن يتجاوز رقم الهاتف 16 رقمًا'
-        }),
-    address: Joi.string().optional().messages({
-        'string.base': 'يجب أن يكون العنوان نصًا'
-    }),
-    image: Joi.any().optional(),
-    visa: Joi.string().optional().allow('').messages({
-        'string.base': 'يجب أن يكون حقل الفيزا نصًا'
-    })
+        })
 }).options({ convert: false });
 
 // تحقق خاص للمسؤولين (يمكنهم تعديل حقل isAdmin)
@@ -105,7 +99,7 @@ export const adminUpdateValidation = Joi.object({
             'string.pattern.base': 'يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل، وحرف كبير واحد، ورقم واحد، وحرف خاص واحد',
             'string.min': 'يجب أن تكون كلمة المرور 8 أحرف على الأقل'
         }),
-    phone: Joi.string()
+    .phone: Joi.string()
         .pattern(phonePattern)
         .min(11)
         .max(16)
@@ -116,27 +110,24 @@ export const adminUpdateValidation = Joi.object({
         }),
     isAdmin: Joi.boolean().messages({
         'boolean.base': 'يجب أن يكون isAdmin قيمة منطقية (true/false)'
-    }),
-    visa: Joi.string().optional().allow('').messages({
-        'string.base': 'يجب أن يكون حقل الفيزا نصًا'
     })
 }).options({ convert: false });
 
 export const refreshTokenValidation = Joi.object({
-    refreshToken: Joi.string().optional().messages({
+    refreshToken: Joi.string().required().messages({
         'any.required': 'رمز التحديث مطلوب'
     })
 });
 
 // التحقق من تغيير كلمة المرور
 export const changePasswordValidation = Joi.object({
-    currentPassword: Joi.string().optional().messages({
+    currentPassword: Joi.string().required().messages({
         'any.required': 'كلمة المرور الحالية مطلوبة'
     }),
     newPassword: Joi.string()
         .min(8)
         .pattern(passwordPattern)
-        .optional()
+        .required()
         .messages({
             'string.pattern.base': 'يجب أن تحتوي كلمة المرور الجديدة على حرف صغير واحد على الأقل، وحرف كبير واحد، ورقم واحد، وحرف خاص واحد',
             'string.min': 'يجب أن تكون كلمة المرور الجديدة 8 أحرف على الأقل',
@@ -144,7 +135,7 @@ export const changePasswordValidation = Joi.object({
         }),
     confirmNewPassword: Joi.string()
         .valid(Joi.ref('newPassword'))
-        .optional()
+        .required()
         .messages({
             'any.only': 'كلمات المرور الجديدة غير متطابقة',
             'any.required': 'تأكيد كلمة المرور الجديدة مطلوب'

@@ -22,7 +22,7 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ["cash", "credit_card", "digital_wallet"],
+        enum: ["cash", "credit_card", "digital_wallet", "visa"],
         required: true
     },
     paymentStatus: {
